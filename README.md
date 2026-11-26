@@ -1,7 +1,17 @@
 # CE 402 Foundation Design Platform
 
 Web-based calculation platform and site design for the CE 402 group assignment (isolated footings on a 30 m x 15 m grid, IS 6403:1981 bearing capacity, IS 1904:1986 settlement limits, alternative foundation).
-Group number: **[fill in]**  ·  Members: **[fill in]**  ·  Live site: **[fill in the GitHub Pages URL]**
+**Group 2** (g = 2, λ = 1.02)
+
+| Member | Roll no. |
+|---|---|
+| Anushka Tomar | B24062 |
+| Shreeya Deolia | B24094 |
+| Divya Jain | B24074 |
+| Chitra Meena | B24068 |
+| Prince Solanki | B24088 |
+
+Live site: https://rohitjangra7370.github.io/ce402-foundation-platform/ (GitHub Pages, branch `main`, folder `/`)
 
 ## Use it
 Open `index.html` in a browser (or `dist/standalone.html`, the same page in one file). No installation, no server, no sign-in; every calculation runs in the browser from the numbers typed into the forms.
@@ -41,17 +51,19 @@ node tests/ui_test.js ; node tests/ui_unseen.js        # 25 + 6 browser checks (
 PAGE=../dist/standalone.html node tests/ui_test.js     # same against the single-file build
 ```
 
-## Re-running the design with the real group number
+## Re-running the design (e.g. if the data change)
 ```
-node tools/site.js <g> 1.5 ; node tools/raft.js <g> 4.4 0.9 ; python3 report/figures.py ; python3 report/make_report.py
+node tools/site.js 2 1.5 ; node tools/site.js 2 3 ; node tools/site.js 2 4
+for D in 1.5 3 4 4.4 ; do node tools/raft.js 2 $D 0.9 ; done
+G=2 python3 report/figures.py ; G=2 python3 report/make_report.py
 ```
-(the report reads the `results/*.json` file names for g = 1, 5, 12; adjust `ISO`/`RG` in `report/make_report.py` if you use other values).
+(The first argument is the group number g. The report also reads the g = 1, 5, 12 result files for its sensitivity tables.)
 
 ## Deploy on GitHub Pages
 Push this folder to a GitHub repository, then Settings -> Pages -> Deploy from a branch -> `main` / root. The site is served at `https://<account>.github.io/<repository>/`.
 
 ## Assumptions to confirm
-Group number g (placeholder 5), the missing load of column C4 (assumed 1450 kN, M = 0), BH-3 clay parameters estimated from correlations, and sources not verified against the primary text (IS 2131:1981, IS 6403 Table 2, the IS 1904 raft row). Details: section 2 and 9 of the report.
+The missing load of column C4 (assumed 1450 kN, M = 0; the instructor gave no further information), BH-3 clay parameters estimated from correlations, and sources not verified against the primary text (IS 2131:1981, IS 6403 Table 2, the IS 1904 raft row). Details: section 2 and 9 of the report.
 
 ## Contributing (each member needs commits)
 Each member commits under their own name: for example a test case, a README correction, a bug fix, a comment with the textbook equation number in `src/engine.js`.

@@ -22,9 +22,14 @@ pdfmetrics.registerFontFamily('DV', normal='DV', bold='DV-B', italic='DV-I', bol
 
 S = json.load(open('data/site.json')); DER = json.load(open('results/derived.json'))
 J = lambda f: json.load(open('results/' + f))
-ISO = J('isolated_g5_Df1.5.json'); ISO3 = J('isolated_g5_Df3.json'); ISO4 = J('isolated_g5_Df4.json'); ISO_g1 = J('isolated_g1_Df1.5.json'); ISO_g12 = J('isolated_g12_Df1.5.json')
-RAFT = {df: J(f'raft_g5_Df{df:g}_t0.9.json') for df in (1.5, 3, 4, 4.4)}
-RG = {(g, df): J(f'raft_g{g}_Df{df:g}_t0.9.json') for g in (1, 12) for df in (4, 4.4)}
+G0 = int(os.environ.get('G', 2))                    # group number of the report; other g values are shown as sensitivity
+GS = sorted({1, 5, 12} - {G0})
+ISO = J(f'isolated_g{G0}_Df1.5.json'); ISO3 = J(f'isolated_g{G0}_Df3.json'); ISO4 = J(f'isolated_g{G0}_Df4.json')
+ISO_G = {gg: J(f'isolated_g{gg}_Df1.5.json') for gg in GS}
+RAFT = {df: J(f'raft_g{G0}_Df{df:g}_t0.9.json') for df in (1.5, 3, 4, 4.4)}
+RG = {(gg, df): J(f'raft_g{gg}_Df{df:g}_t0.9.json') for gg in GS for df in (4, 4.4)}
+MEMBERS = [('Anushka Tomar', 'B24062'), ('Shreeya Deolia', 'B24094'), ('Divya Jain', 'B24074'), ('Chitra Meena', 'B24068'), ('Prince Solanki', 'B24088')]
+URL_SITE = 'https://rohitjangra7370.github.io/ce402-foundation-platform/'; URL_REPO = 'https://github.com/Rohitjangra7370/ce402-foundation-platform'
 REC = RAFT[4.4]
 SRC = json.load(open('docs/sources.json'))
 g = ISO['g']; lam = ISO['lambda']
@@ -81,10 +86,10 @@ story = []
 story += [P('CE 402 Geotechnical Engineering', ParagraphStyle('x', parent=BODY, fontName='DV-B', fontSize=10, textColor=colors.HexColor('#555555'))),
           P('Foundation design platform and site foundation design', TITLE),
           P('Group assignment (Assignment 05): 28 isolated footings on a 30 m × 15 m grid, IS 6403:1981 bearing capacity, IS 1904:1986 settlement limits, alternative foundation', ParagraphStyle('sub', parent=BODY, fontSize=9.5, leading=13, textColor=colors.HexColor('#333333'))),
-          tbl([['Group number g', f'{g} (<b>PLACEHOLDER</b>: g is not stated in the assignment text; replace and re-run, see section 2)'],
-               ['Members (names, roll numbers)', '[to be filled in by the group]'],
-               ['Deployed platform (public URL)', '[to be filled in by the group: see section 8 for the GitHub Pages steps]'],
-               ['Source repository', '[to be filled in by the group: every member must have commits, see section 8]'],
+          tbl([['Group number', f'<b>Group {g}</b> (so g = {g} and λ = 1 + g/100 = {lam:.2f})'],
+               ['Members (names, roll numbers)', '<br/>'.join(f'{a} ({b})' for a, b in MEMBERS)],
+               ['Deployed platform (public URL)', URL_SITE],
+               ['Source repository (GitHub)', URL_REPO],
                ['Date', '26 November 2026 (due date)']], [48 * mm, W - 48 * mm], hdr=0, zebra=False),
           Spacer(1, 6),
           P('<b>Prepared with AI assistance (Claude).</b> Appendix A is the AI-use log, Appendix B the AI audit, Appendix C the traceability table of every equation in the code. '
@@ -103,12 +108,13 @@ story += [P(
     f'treating the raft as perfectly flexible gives a worst adjacent-column angular distortion 1/{1/worst_r["ang"]:.0f} (limit 1/500, <b>not met</b>, governed by the artificial step between the BH-1 and BH-3 zones), '
     f'treating it as rigid gives a tilt of {rig["tiltStr"]} (<b>met</b>). The true value lies between; a stiff box (raft plus basement walls) is therefore required and a soil–structure interaction analysis is the next design step. '
     f'Contingency if that analysis fails: piles under the east strip (not designed here). A plain raft at Df = 1.5 m is rejected ({RAFT[1.5]["max"]:.0f} mm).', BOX),
-    P(f'<b>Everything depends on three inputs that the assignment text did not settle</b>: the group number g (placeholder {g}), the missing load of column C4 (assumed 1450 kN, M = 0) and BH-3 clay parameters that had to be estimated from correlations (no valid consolidation test). Section 2 lists them; section 6.4 shows the sensitivity to g.', WARN)]
+    P(f'<b>Two inputs are assumptions</b> because the instructor gave no further information on the assignment: the missing load of column C4 (assumed 1450 kN, M = 0) and the BH-3 clay parameters, which had to be estimated from correlations (no valid consolidation test). Section 2 lists all assumptions; section 6.4 shows how the results change with the group number g.', WARN)]
 
 # ================================================================== 2 ASSUMPTIONS
 story += [P('2. Data, assumptions and flags', H1)]
 story += B([
-    f'<b>Group number g.</b> The assignment text defines λ = 1 + g/100 but does not give the group number. g = {g} (λ = {lam:.2f}) is used as a placeholder. All scripts take g as an argument (<font name="DV-B">node tools/site.js &lt;g&gt; &lt;Df&gt;</font>, <font name="DV-B">node tools/raft.js &lt;g&gt; &lt;Df&gt; &lt;t&gt;</font>). Section 6.4 shows g = 1, {g} and 12.',
+    f'<b>Group number g.</b> We are Group {g}, so g = {g} and λ = 1 + g/100 = {lam:.2f}. All scripts take g as an argument (<font name="DV-B">node tools/site.js &lt;g&gt; &lt;Df&gt;</font>, <font name="DV-B">node tools/raft.js &lt;g&gt; &lt;Df&gt; &lt;t&gt;</font>). Section 6.4 also shows g = 1, 5 and 12.',
+    'The instructor gave no further information about this assignment (reported by the group), so every assumption listed here is the group\'s own and is stated openly for the marker.',
     f'<b>Column C4</b> is on the grid but missing from the load table. It is taken as an interior column (1450 kN, M = 0). The assignment mentions a rectangular footing for an eccentric column; with M = 0 for every listed column no footing is eccentric, so all 28 footings are square. If the instructor intends C4 to carry a moment, re-run with the correct value.',
     'Loads given are treated as service loads multiplied by λ; FS = 3.0 is applied to the <b>net</b> ultimate bearing capacity (IS 6403). Net applied pressure = (column load λP + footing weight − weight of soil replaced) / area, where the footing thickness is assumed as t = clamp((B − 0.4)/4, 0.45, 1.2) m.',
     'Water table: the design water table is the highest (August) level of each borehole (BH-1 1.0 m, BH-2 1.7 m, BH-3 0.6 m); the measured level (2.6, 3.2, 1.9 m) is used only to correct the SPT values, since that is the condition at the time of the test. Capillary rise is ignored.',
@@ -192,7 +198,7 @@ story += [tbl([['Item', 'Value', 'Limit', 'Result'],
 story += [Spacer(1, 4),
           P(f'Making the footings bigger does not help: the settlement is not governed by the footing size but by the soft clay 4–11 m deep that all 28 footings load together (the group effect doubles to triples the clay settlement of a single isolated footing: column "Cons. + group" vs "Cons. own"). '
             f'Deeper founding was tested as well: Df = 3.0 m gives a maximum of {max(c["Stot"] for c in ISO3["cols"]):.0f} mm (worst angular distortion 1/{1/ISO3["worst"]["ang"]:.0f}) and Df = 4.0 m gives {max(c["Stot"] for c in ISO4["cols"]):.0f} mm (1/{1/ISO4["worst"]["ang"]:.0f}). '
-            f'Group sensitivity at Df = 1.5 m: g = 1 → {max(c["Stot"] for c in ISO_g1["cols"]):.0f} mm, g = {g} → {mxS:.0f} mm, g = 12 → {max(c["Stot"] for c in ISO_g12["cols"]):.0f} mm. In every case the maximum settlement is more than five times the limit, so the conclusion does not depend on g.'),
+            'Group sensitivity at Df = 1.5 m (maximum settlement): ' + ', '.join(f'g = {gg} → {mm:.0f} mm' for gg, mm in sorted([(gg, max(c['Stot'] for c in d['cols'])) for gg, d in ISO_G.items()] + [(g, mxS)])) + '. In every case the maximum settlement is more than five times the limit, so the conclusion does not depend on g.'),
           P('5.2 Worked example: footing B3 (BH-1 zone, interior column)', H2)]
 bc = ex['bear']['bc']; G_ = bc['gen']; L_ = bc['loc']
 we = [['Quantity', 'General shear', 'Local shear'],
@@ -211,7 +217,7 @@ opt = [['Option', 'Result (g = %s)' % g, 'Verdict'],
        ['Isolated footings, Df 1.5–4.0 m', f'{mxS:.0f} to {max(c["Stot"] for c in ISO4["cols"]):.0f} mm; angular distortion 1/{1/worst_iso["ang"]:.0f} or worse', 'Rejected: settlement of soft clay'],
        ['Raft 31×16 m at Df = 1.5 m (t = 0.9 m)', f'net {min(v["qnet"] for v in RAFT[1.5]["perBH"].values()):.0f}–{max(v["qnet"] for v in RAFT[1.5]["perBH"].values()):.0f} kPa; max {RAFT[1.5]["max"]:.0f} mm; flexible angular 1/{1/RAFT[1.5]["worst"]["ang"]:.0f}', 'Rejected: large raft but same clay, net pressure still 60 kPa'],
        ['Raft at Df = 3.0 m', f'net ≈ {RAFT[3]["perBH"]["BH-1"]["qnet"]:.0f} kPa; max {RAFT[3]["max"]:.0f} mm; 1/{1/RAFT[3]["worst"]["ang"]:.0f}', 'Rejected'],
-       ['Raft at Df = 4.0 m', f'net ≈ {RAFT[4]["perBH"]["BH-1"]["qnet"]:.0f} kPa; max {RAFT[4]["max"]:.0f} mm; 1/{1/RAFT[4]["worst"]["ang"]:.0f} flexible, rigid {RAFT[4]["rigid"]["tiltStr"]}', 'Total settlement met at g = 5 but not at g = 12 (flexible, %.0f mm); marginal' % RG[(12, 4)]['max']],
+       ['Raft at Df = 4.0 m', f'net ≈ {RAFT[4]["perBH"]["BH-1"]["qnet"]:.0f} kPa; max {RAFT[4]["max"]:.0f} mm; 1/{1/RAFT[4]["worst"]["ang"]:.0f} flexible, rigid {RAFT[4]["rigid"]["tiltStr"]}', 'Total settlement met at g = %d (%.0f mm flexible) but not at g = 12 (%.0f mm); marginal' % (g, RAFT[4]['max'], RG[(12, 4)]['max'])],
        ['<b>Compensated raft at Df = 4.4 m</b>', f'net {min(v["qnet"] for v in REC["perBH"].values()):.1f}–{max(v["qnet"] for v in REC["perBH"].values()):.1f} kPa; max {REC["max"]:.0f} mm; flexible 1/{1/worst_r["ang"]:.0f}, rigid {rig["tiltStr"]}', '<b>Recommended</b> (conditional on stiffness check)'],
        ['Piles (bored, into dense gravel at 9.6–11.2 m)', 'not designed', 'Contingency for the east strip: cobbles/boulders make driving impractical, bored piles need casing through the saturated loose sand; settlement would be small but cost and construction difficulty are high'] ]
 story += [tbl(opt, [52 * mm, 63 * mm, W - 115 * mm]), Spacer(1, 4),
@@ -246,11 +252,11 @@ story += B([
 
 story += [P('6.4 Sensitivity to the group number g', H2)]
 sens = [['g (λ)', 'Df = 4.0 m: max settlement (mm); flexible angular distortion; rigid tilt', 'Df = 4.4 m: max settlement (mm); flexible angular distortion; rigid tilt']]
-for gg in (1, g, 12):
+for gg in sorted({g, *GS}):
     a = (RG[(gg, 4)] if gg != g else RAFT[4]); b = (RG[(gg, 4.4)] if gg != g else RAFT[4.4])
     sens.append([f'{gg} ({1+gg/100:.2f})', f'{a["max"]:.0f}; 1/{1/a["worst"]["ang"]:.0f}; {a["rigid"]["tiltStr"]}', f'{b["max"]:.0f}; 1/{1/b["worst"]["ang"]:.0f}; {b["rigid"]["tiltStr"]}'])
 story += [tbl(sens, [24 * mm, 70 * mm, W - 94 * mm]),
-          P('The compensated raft is sensitive to λ because the net pressure is a small difference of two large numbers (88 kPa gross minus about 84 kPa relieved). The design must be re-run with the real g and with the final basement loads.', SM)]
+          P('The compensated raft is sensitive to λ because the net pressure is a small difference of two large numbers (' + f'{REC["qgross"]:.0f} kPa gross minus about {REC["qgross"] - REC["perBH"]["BH-3"]["qnet"]:.0f} kPa relieved' + '). The design must be re-run if the loads change and with the final basement loads.', SM)]
 
 story += [P('7. Seismic note and liquefaction screening', H1),
           P('The site is in seismic Zone V. The loose to medium dense saturated silty sands at BH-3 (SM, N = 6 at 1.5 m, 24 % fines; SP, N = 14 at 3.0 m; water table 0.6 m) are potentially liquefiable, and the BH-1 silty sand (N = 13–16 below a 1.0 m water table) is a lesser concern. '
@@ -280,7 +286,7 @@ story += B([
 
 story += [P('9. Limits of this report and what the group must still do', H1)]
 story += B([
-    'Replace the placeholder g, the member names, the URL and the repository link; re-run the two scripts with the real g and update sections 1, 5, 6 (the tables are generated: <font name="DV-B">python3 report/make_report.py</font>).',
+    'Check that the public URL opens, and that every member has made at least one commit in the repository (section 8). If the instructor later supplies the load or moment of C4 or other data, edit <font name="DV-B">data/site.json</font>, re-run the two scripts and <font name="DV-B">python3 report/make_report.py</font> (all tables and figures are generated).',
     'Check the transcription of all site data in <font name="DV-B">data/site.json</font> against the assignment PDF, and decide whether the C4 assumption is right.',
     '<b>Unverified sources:</b> IS 2131:1981 could not be opened (the SPT corrections follow a BIS revision draft and NPTEL notes); IS 6403 Table 2 (shape/depth/inclination factors) and the IS 1904 raft row were illegible in the scan and were taken from a secondary source. Textbook equation numbers are deliberately not quoted because they differ between editions; fill them in from your own copy in Appendix C.',
     'The soil–structure interaction check of the raft, the liquefaction analysis, the layered bearing (punching) check, the construction-stage checks and the structural design are not done.',
@@ -307,9 +313,9 @@ story += [Paragraph(f'[{i+1}] {t}', ParagraphStyle('r', parent=SM, fontSize=7, l
 story += [PageBreak(), P('Appendix A. AI-use log', H1),
           P('Tool: Claude (Anthropic) running in the Claude Code agent harness; configured model <font name="DV-B">claude-sonnet-5-5</font> (the serving model may differ). Date of all entries: 26 November 2026. '
             '<b>The only prompt given to the AI for this assignment was</b> <font name="DV-B">"Now do this assignment"</font> (with the assignment PDF attached); the AI then planned and carried out the work on its own, so the steps below are the AI\'s decisions, each with what the group should do about it. '
-            'Prompts and sessions of other group members are not in this log: <b>the group must add them</b> (date, tool, purpose, verbatim key prompts, accepted / changed / rejected and why).', BODY)]
+            'No AI use by other group members was reported when this report was generated. If any member used AI for this assignment, <b>add those sessions here</b> (date, tool, purpose, verbatim key prompts, accepted / changed / rejected and why).', BODY)]
 log = [['#', 'Purpose', 'Output of the AI', 'Decision (accepted / changed / rejected) and reason'],
-       ['1', 'Read the assignment, extract data', 'Transcription of grid, loads, zoning, water tables, laboratory tables into data/site.json', '<b>Accepted with check needed</b>: the group must re-read every number against the PDF. <b>Changed</b>: C4 (not in the load table) assumed 1450 kN; g (not given) set to a placeholder 5.'],
+       ['1', 'Read the assignment, extract data', 'Transcription of grid, loads, zoning, water tables, laboratory tables into data/site.json', '<b>Accepted with check needed</b>: the group must re-read every number against the PDF. <b>Changed</b>: C4 (not in the load table) assumed 1450 kN; g = 2 taken from the group number given by the group.'],
        ['2', 'Bearing-capacity equations', 'IS 6403 equation, Nγ = 2(Nq+1)tanφ, shape/depth/inclination factors', '<b>Rejected</b> the AI\'s first recollection of Meyerhof\'s Nγ (15.7 at 30°) and rectangular sq = 1.0; <b>accepted</b> the form that reproduces IS 6403 Table 1 (22.40) and the secondary-source shape factors (flagged, section 9).'],
        ['3', 'SPT corrections', 'CN overburden then dilatancy order, measured vs design water table', '<b>Accepted</b> with the warning that IS 2131:1981 itself was not available (BIS draft and NPTEL used).'],
        ['4', 'Laboratory interpretation', 'Soaked direct shear φ′ = 30°/34°, cu = ½ deviator, Cc, Cr, σ′c, cv unit conversions', '<b>Rejected</b> the unsoaked shear c′ = 6.9 kPa (suction) and the SPT N = 22 at 9.0 m (cobble). <b>Accepted</b> soaked values and NC clay.'],
@@ -317,8 +323,8 @@ log = [['#', 'Purpose', 'Output of the AI', 'Decision (accepted / changed / reje
        ['6', 'Engine, tests, independent cross-check', 'src/engine.js, 42 benchmark tests, 51-check Python script', '<b>Changed</b> after errors were found by running it (Appendix B).'],
        ['7', 'Web platform', 'index.html, app.js, style.css, 31 browser tests', '<b>Changed</b> twice after review (drainage of stacked clay layers; NaN from blank unit weights; Appendix B).'],
        ['8', 'Isolated-footing design', 'All 28 footings sized, settlement with group effect, IS 1904 check', '<b>Accepted</b> as the design result: the footings fail. Deeper founding and other g were tested and <b>rejected</b> as a fix.'],
-       ['9', 'Alternative foundation', 'Raft at 1.5, 3.0, 4.0, 4.4 m; rigid/flexible bounds; sensitivity to g', 'The initial idea of a plain raft was <b>rejected</b> after calculation (253 mm). The compensated raft is <b>recommended conditionally</b>; piles <b>not designed</b>.'],
-       ['10', 'Report', 'This document, generated from the result files', '<b>Changed</b> by the group before submission: names, URL, g, AI log of members.']]
+       ['9', 'Alternative foundation', 'Raft at 1.5, 3.0, 4.0, 4.4 m; rigid/flexible bounds; sensitivity to g', f'The initial idea of a plain raft was <b>rejected</b> after calculation ({RAFT[1.5]["max"]:.0f} mm). The compensated raft is <b>recommended conditionally</b>; piles <b>not designed</b>.'],
+       ['10', 'Report', 'This document, generated from the result files', 'Group 2 data (g, members, links) added at the group\'s request; the group must read and check it before submitting.']]
 story += [tbl(log, [6 * mm, 36 * mm, 52 * mm, W - 94 * mm], fs=7.2)]
 
 # ================================================================== APPENDIX B
@@ -329,7 +335,7 @@ aud = [['#', 'What the AI produced', 'How it was detected', 'Correction and less
        ['2', '<b>Stacked clay layers treated as separately double-drained.</b> The first version of the time-settlement module gave each clay layer its own two-way drainage. At BH-1 and BH-3 two clay layers lie on top of each other, so the upper one has no free-draining base, and the drainage path would have been halved wrongly (for the two equal-thickness clay layers of BH-1 and BH-3 the drainage path would be half as long, so the computed consolidation time would be 4 times too short).', 'Reading the code against the physical profile before accepting the first output.', 'Contiguous clay layers are now one stratum with cv(eq) = (ΣH)²/(ΣH/√cv)²; drainage (single/double) is chosen per stratum; the function is covered by the cross-check.'],
        ['3', '<b>Silent NaN stresses.</b> A blank unit-weight box was passed to the engine as NaN (parseFloat of an empty string) and the engine only guarded null or empty-string values, so entering only γsat would have given NaN stresses without any error message.', 'Code review of the interface between the form and the engine.', 'Blank is now undefined, the engine falls back to the other unit weight, and a message appears when both are blank. The unseen-data test uses a layer with γsat only.'],
        ['4', '<b>Undefined function in the engine.</b> engine.js called log10 in four functions without defining it; the first batch of unit tests did not call those functions and passed.', 'First run of the parameter-derivation script produced a ReferenceError.', 'Defined it and extended the tests to every exported function. A passing test suite only proves the functions it calls.'],
-       ['5', '<b>Sourcing weakness and a modelling artefact.</b> (a) IS 2131 could not be opened, IS 6403 Table 2 and the IS 1904 raft row were garbled: the AI had used values from a secondary source. (b) The mandatory borehole zoning is a step function, so the flexible-raft angular distortion (1/265) is dominated by the jump between columns B5 and B6.', '(a) Fetch failure and an unreadable scan. (b) The result table: the largest differential sits exactly at the zone boundary.', '(a) Marked "unverified" in sections 4 and 9 and in the references. (b) The result is reported as an upper bound next to a rigid-raft lower bound instead of quoting the favourable one; a soil–structure interaction analysis is listed as the next step.']]
+       ['5', '<b>Sourcing weakness and a modelling artefact.</b> (a) IS 2131 could not be opened, IS 6403 Table 2 and the IS 1904 raft row were garbled: the AI had used values from a secondary source. (b) The mandatory borehole zoning is a step function, so the flexible-raft angular distortion (1/' + f'{1/worst_r["ang"]:.0f}' + ') is dominated by the jump between columns B5 and B6.', '(a) Fetch failure and an unreadable scan. (b) The result table: the largest differential sits exactly at the zone boundary.', '(a) Marked "unverified" in sections 4 and 9 and in the references. (b) The result is reported as an upper bound next to a rigid-raft lower bound instead of quoting the favourable one; a soil–structure interaction analysis is listed as the next step.']]
 story += [tbl(aud, [6 * mm, 62 * mm, 40 * mm, W - 108 * mm], fs=7.1)]
 
 # ================================================================== APPENDIX C
@@ -357,10 +363,10 @@ story += [P('Not covered by engine.js (outside the engine by design): layout and
 # ------------------------------------------------------------------ build
 def footer(c, d):
     c.saveState(); c.setFont('DV', 7); c.setFillColor(colors.HexColor('#666666'))
-    c.drawString(18 * mm, 10 * mm, f'CE 402 foundation design · g = {g} (placeholder) · prepared with AI assistance, see Appendices A–B')
+    c.drawString(18 * mm, 10 * mm, f'CE 402 foundation design · Group {g} · prepared with AI assistance, see Appendices A–B')
     c.drawRightString(A4[0] - 18 * mm, 10 * mm, f'Page {d.page}'); c.restoreState()
 doc = BaseDocTemplate('report/CE402_Foundation_Report.pdf', pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=17 * mm,
-                      title='CE 402 foundation design platform and site foundation design', author='[Group members]')
+                      title='CE 402 foundation design platform and site foundation design', author='CE 402 Group 2')
 doc.addPageTemplates([PageTemplate(id='p', frames=[Frame(18 * mm, 17 * mm, W, A4[1] - 33 * mm, id='f', leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)], onPage=footer)])
 doc.build(story)
 print('built report/CE402_Foundation_Report.pdf')
