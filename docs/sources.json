@@ -1,0 +1,142 @@
+[
+ {
+  "fn": "stressAt",
+  "what": "Total stress, pore pressure and effective stress at depth z (m bgl) for a water table at depth zw (m bgl; Infinity = none).",
+  "src": "Terzaghi effective-stress principle; IS 6403:1981 cl. 2.2.2 (total unit weight above, submerged below the water table). No capillary rise assumed."
+ },
+ {
+  "fn": "meanBulkGamma",
+  "what": "Mean TOTAL unit weight between two depths (used for gamma in the 3rd bearing term, because IS 6403 defines gamma as the bulk unit weight and handles the water table through W').",
+  "src": "IS 6403:1981 cl. 5.1.2 (definition of gamma in the third term); depth-average of total stress."
+ },
+ {
+  "fn": "sptCorrect",
+  "what": "SPT corrections. Returns every step so the user can see it.",
+  "src": "IS 2131:1981 - overburden correction N' = CN.N (CN from the chart of Peck, Hanson & Thornburn 1974, closed form CN = 0.77 log10(2000/sigma'v), sigma'v in kPa, capped at 2.0); then the dilatancy correction (Terzaghi & Peck 1948), Ncorr = 15 + 0.5 (N' - 15), only for FINE or SILTY sand BELOW the water table and only when N' > 15. Order: overburden first, then dilatancy on N' (BIS revision draft of IS 2131, cl. 5.7.1-5.7.4; NPTEL Module 1 Lec. 4). opts: {N, z, profile, wt, fineSand:boolean, cohesionless:boolean, refusal:boolean}"
+ },
+ {
+  "fn": "phiFromN",
+  "what": "Friction angle from corrected N.",
+  "src": "Peck, Hanson & Thornburn (1974) chart, fitted by Wolff (1989): phi = 27.1 + 0.3 N - 0.00054 N^2 (degrees). Correlation only; prefer lab data."
+ },
+ {
+  "fn": "dsFit",
+  "what": "Ordinary least squares tau = c + sigma tan(phi).",
+  "src": "Mohr-Coulomb strength envelope fitted by ordinary least squares (any statistics text); direct shear: IS 2720 (Part 13). o.origin = true forces c = 0."
+ },
+ {
+  "fn": "cuFromUU",
+  "what": "UU triaxial: cu = (sigma1 - sigma3)f / 2.",
+  "src": "IS 2720 (Part 11); phi_u = 0 analysis."
+ },
+ {
+  "fn": "oedAnalyse",
+  "what": "Oedometer analysis. pts: [{p (kPa), e, stage:'L'|'U'}] in the order tested. Cc = slope of the last loading increments (virgin line), Cr = slope of the unloading branch; sigma'c = intersection of the initial (recompression) line and the virgin line (bilinear approximation of Casagrande's construction - a graphical judgement).",
+  "src": "Terzaghi & Peck 1967; Casagrande 1936 (preconsolidation); IS 2720 (Part 15)."
+ },
+ {
+  "fn": "bcFactors",
+  "what": "Bearing capacity factors.",
+  "src": "IS 6403:1981 Table 1. Closed forms that reproduce Table 1: Nq = e^(pi tan phi) tan^2(45+phi/2) (Reissner/Prandtl) Nc = (Nq - 1) cot phi ; Nc(0) = 5.14 Ngamma = 2 (Nq + 1) tan phi (Vesic form - reproduces Table 1: 22.40 at 30 deg). NOTE: Meyerhof's (Nq-1)tan(1.4 phi) and Hansen's 1.5(Nq-1)tan phi give different values (15.7 and 15.1 at 30 deg) and must NOT be mixed with IS 6403 shape/depth factors."
+ },
+ {
+  "fn": "shapeFactors",
+  "what": "(see source)",
+  "src": "IS 6403:1981 Table 2. Rectangle row as printed in secondary copies (sq = 1 + 0.2 B/L); the primary scan is not legible - verify in your copy."
+ },
+ {
+  "fn": "depthFactors",
+  "what": "(see source)",
+  "src": "IS 6403:1981 cl. 5.1.2.2 depth factors (backfill must be compacted)."
+ },
+ {
+  "fn": "inclFactors",
+  "what": "(see source)",
+  "src": "IS 6403:1981 cl. 5.1.2.3 inclination factors (alpha = load inclination from vertical)."
+ },
+ {
+  "fn": "waterFactor",
+  "what": "(see source)",
+  "src": "IS 6403:1981 cl. 5.1.2.4: W' = 1 if the water table is at or below Df + B; W' = 0.5 if it is at or above the base; linear in between."
+ },
+ {
+  "fn": "bcCore",
+  "what": "Net ultimate bearing capacity, one shear mode.",
+  "src": "IS 6403:1981 cl. 5.1.2(a): qnu = c Nc sc dc ic + q (Nq-1) sq dq iq + 0.5 B gamma Ngamma sg dg ig W' q = effective overburden at base level; gamma = BULK unit weight of foundation soil."
+ },
+ {
+  "fn": "bearing",
+  "what": "Full IS 6403 evaluation including shear mode, eccentricity and factor of safety. p: {shape, B, L, Df, c, phi, gamma, q, zw, alpha, eB, eL, mode:'general'|'local'|'auto', e (void ratio) | Dr (%), FS} Local shear: tan(phi') = 0.67 tan(phi) (IS 6403 Table 3 note), c' = 2c/3 (Terzaghi 1943). Medium soils (e 0.55..0.75 or Dr 70..20 %): interpolate between general and local shear (IS 6403:1981 cl. 5.2.1.1 and Table 3). Eccentricity: B' = B - 2eB, L' = L - 2eL, A' = B'L' (IS 6403:1981 cl. 5.0.1 / Meyerhof).",
+  "src": "IS 6403:1981 (shear modes, effective area); Terzaghi (1943) for the local-shear reduction; FS applied to the NET ultimate capacity: qns = qnu / FS (IS 6403:1981; clause number to be confirmed in the group's copy)."
+ },
+ {
+  "fn": "netPressure",
+  "what": "Effective-area pressure helper: net applied pressure on the effective area. Q (kN) is the net load (column load + footing/backfill minus replaced soil).",
+  "src": "IS 6403:1981 cl. 5.0.1 (effective area); net pressure = gross - overburden removed (Terzaghi & Peck 1967)."
+ },
+ {
+  "fn": "Icorner",
+  "what": "Influence factor at the CORNER of a uniformly loaded rectangle, m = b/z, n = l/z.",
+  "src": "Boussinesq (1885) integrated by Newmark (1935); closed form as in Das, Principles of Foundation Engineering, \"stress below the corner of a rectangular area\". atan2 form is valid for m^2 n^2 > m^2 + n^2 + 1 as well (the plain arctan is not)."
+ },
+ {
+  "fn": "dsCorner",
+  "what": "Vertical stress increase below the corner of a rectangle B x L loaded with q.",
+  "src": "Boussinesq (1885) / Newmark (1935): delta-sigma_z = q I(m = B/z, n = L/z)."
+ },
+ {
+  "fn": "dsCentre",
+  "what": "Below the CENTRE: four sub-rectangles of B/2 x L/2 (superposition).",
+  "src": "Newmark (1935) superposition of corner stresses; Das, Principles of Foundation Engineering."
+ },
+ {
+  "fn": "dsPoint",
+  "what": "General point (px,py) and several rectangles {x1,x2,y1,y2,q}: inclusion-exclusion over the four corners measured from the point (superposition). z > 0.",
+  "src": "Newmark (1935) superposition: sign-weighted sum of corner influence factors."
+ },
+ {
+  "fn": "dsTwoToOne",
+  "what": "2:1 method.",
+  "src": "Terzaghi & Peck (1948) approximate load spread, 2 vertical : 1 horizontal. Delta-sigma = q B L / ((B+z)(L+z)) ; strip: q B/(B+z)."
+ },
+ {
+  "fn": "schmertmann",
+  "what": "Strain-influence-factor method.",
+  "src": "Schmertmann, Hartman & Brown (1978), J. Geotech. Eng. Div. ASCE 104(GT8): S = C1 C2 dp SUM( Iz/Es dz ) C1 = 1 - 0.5 sigma'v0/dp (>= 0.5); C2 = 1 + 0.2 log10(t/0.1) (t in years) Izp = 0.5 + 0.1 sqrt(dp/sigma'vp) at z = 0.5B (square) ... B (strip, L/B >= 10) Iz(0) = 0.1 (square) ... 0.2 (strip); Iz = 0 at 2B (square) ... 4B (strip); linear interpolation with L/B (1..10). o: {B, L, Df, dp (net pressure kPa), profile, wt, t (years), Es:function(zBgl, layer)->kPa} Layers of kind 'clay' are skipped (their settlement is done by consolidation, spec P5)."
+ },
+ {
+  "fn": "consolidationLayer",
+  "what": "Stage-by-stage one-dimensional consolidation of ONE clay layer in sublayers <= maxSub.",
+  "src": "Terzaghi (1943); Das, Principles of Geotechnical Engineering (primary consolidation settlement of NC and OC clay): NC (sigma'0 >= sigma'c): S = Cc H/(1+e0) log10((s0+ds)/s0) OC, s0+ds <= sigma'c: S = Cr H/(1+e0) log10((s0+ds)/s0) OC, s0 < sigma'c < s0+ds: S = Cr H/(1+e0) log10(sc/s0) + Cc H/(1+e0) log10((s0+ds)/sc) o: {profile, wt, layer, dsFn(zBgl)->kPa, maxSub} returns sublayer table and total (mm)."
+ },
+ {
+  "fn": "degreeU",
+  "what": "Terzaghi average degree of consolidation.",
+  "src": "Terzaghi (1943) 1-D consolidation, series solution U = 1 - SUM 2/M^2 exp(-M^2 Tv), M = pi(2m+1)/2."
+ },
+ {
+  "fn": "timeFactor",
+  "what": "Time factor Tv = cv t / Hdr^2 with cv in cm2/s converted to m2/year (see CM2S_TO_M2YR). drainage: 'double' -> Hdr = H/2 ; 'single' -> Hdr = H.",
+  "src": "Terzaghi (1943): Tv = cv t / Hdr^2; IS 2720 (Part 15) for cv from the oedometer test."
+ },
+ {
+  "fn": "timeSettlement",
+  "what": "Time-settlement curve for several clay results [{S (mm), H (m), cv (cm2/s), drainage}] + immediate.",
+  "src": "Terzaghi (1943): S(t) = S_immediate + sum U(Tv) Sc (settlement of each stratum scaled by its degree of consolidation)."
+ },
+ {
+  "fn": "cvEquivalent",
+  "what": "Equivalent cv of contiguous clay layers that drain through the SAME path (they are treated as one stratum for the time-rate calculation): cv_eq = (H1 + H2 + ...)^2 / (H1/sqrt(cv1) + H2/sqrt(cv2) + ...)^2",
+  "src": "Das, Principles of Geotechnical Engineering, \"layered soil, equivalent cv\" (derived from equal travel time of the pore-pressure front: t = H^2 / cv per layer). layers: [{H (m), cv (any consistent unit)}]"
+ },
+ {
+  "fn": "timeForU",
+  "what": "Time for a given degree of consolidation (bisection on the series).",
+  "src": "inverse of Terzaghi's U(Tv): t = Tv Hdr^2 / cv."
+ },
+ {
+  "fn": "is1904Limits",
+  "what": "(see source)",
+  "src": "IS 1904:1986 Table 1 (RC framed structures) and cl. 16.3.5 (differential settlement = max - min; angular distortion = differential / distance between the two points). The scanned table is partly garbled: raft rows are read as 0.0021 L and 1/500."
+ }
+]

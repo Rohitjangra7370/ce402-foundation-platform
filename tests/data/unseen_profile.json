@@ -1,0 +1,6 @@
+{ "gl": "", "wtMeasured": "", "wtDesign": "",
+  "layers": [
+   { "name": "Dense sand", "kind": "sand", "top": "0", "bot": "2.5", "gm": "17.0", "gs": "", "Ntxt": "1.0:28, 2.0:34", "fine": false, "c": "0", "phi": "36", "Es": "35000" },
+   { "name": "OC clay", "kind": "clay", "top": "2.5", "bot": "6.5", "gm": "", "gs": "19.2", "Ntxt": "", "cu": "60", "e0": "0.70", "Cc": "0.22", "Cr": "0.03", "ocr": "2.5", "cv": "2.0e-3" },
+   { "name": "Weathered rock", "kind": "gravel", "top": "6.5", "bot": "12", "gm": "22", "gs": "22", "Es": "150000", "c": "0", "phi": "42" }
+  ] }

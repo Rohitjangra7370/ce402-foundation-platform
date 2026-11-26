@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foundation Design Platform - CE 402</title>
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<header>
+  <h1>Foundation Design Platform</h1>
+  <p>CE 402 Geotechnical Engineering &middot; shallow foundations to IS 6403:1981 / IS 1904:1986 &middot; SI units (kN, kPa, m, mm). Runs entirely in your browser: nothing to install, no data leaves your computer.</p>
+  <nav>
+    <button class="tab on" data-p="p1">1 Soil profile</button>
+    <button class="tab" data-p="p2">2 Parameters</button>
+    <button class="tab" data-p="p3">3 Bearing capacity</button>
+    <button class="tab" data-p="p4">4 Stress increase</button>
+    <button class="tab" data-p="p5">5 Settlement</button>
+    <button class="tab" data-p="p6">About &amp; sources</button>
+  </nav>
+</header>
+<main>
+
+<!-- ================= P1 ================= -->
+<section class="panel" id="p1">
+  <h2>1 &middot; Soil profile</h2>
+  <p class="note">Enter one borehole. Layers must run from the ground surface (0 m) without gaps. Only the columns your analysis needs have to be filled (SPT &rarr; N; bearing &rarr; c′, φ′ or cu; settlement &rarr; Es or qc/N for sand, e0, Cc, Cr, cv for clay). Type SPT results as <code>depth:N</code> separated by commas, e.g. <code>1.5:13, 3.0:16</code>; put <code>!</code> in front of a result you reject (e.g. <code>!9.0:22</code>); N ≥ 100 is treated as refusal.</p>
+  <div class="bar">
+    <label>Ground level (optional) <input id="gl" size="7" inputmode="decimal"> <span class="u">m RL</span></label>
+    <label>Water table, measured <input id="wtM" size="6" inputmode="decimal"> <span class="u">m bgl</span></label>
+    <label>Water table, design (highest) <input id="wtD" size="6" inputmode="decimal"> <span class="u">m bgl</span></label>
+  </div>
+  <p class="note">Measured water table = at the time of the SPT (used to correct the field N). Design water table = the one used for stresses, bearing capacity and settlement. Leave blank for no water table.</p>
+  <div class="bar">
+    <button type="button" id="addLayer">+ Add layer</button>
+    <button type="button" id="clearAll">Clear all</button>
+    <button type="button" id="exportBtn">Export profile (JSON)</button>
+    <label class="filebtn">Import profile (JSON) <input type="file" id="importFile" accept="application/json,.json"></label>
+    <span class="sep"></span>
+    <span class="note">Optional example data (separate file <code>src/examples.js</code>, never used by the calculations):</span>
+    <button type="button" id="exBH1" hidden>Load BH-1</button><button type="button" id="exBH2" hidden>Load BH-2</button><button type="button" id="exBH3" hidden>Load BH-3</button>
+  </div>
+  <div class="scroll"><div id="layerTable"></div></div>
+  <div id="profileOut"></div>
+</section>
+
+<!-- ================= P2 ================= -->
+<section class="panel" id="p2" hidden>
+  <h2>2 &middot; Parameter tools</h2>
+
+  <h3>2a &middot; SPT correction (IS 2131) and φ′ from N</h3>
+  <p class="note">Uses the SPT values and the water table typed in tab 1.</p>
+  <div class="bar">
+    <label>Water table for the correction
+      <select id="sptWT"><option value="measured">measured (at time of test)</option><option value="design">design (highest)</option></select></label>
+    <button type="button" id="runSPT">Correct N values</button>
+  </div>
+  <div id="sptOut"></div>
+
+  <h3>2b &middot; Direct shear: c′ and φ′ by least squares</h3>
+  <p class="note">One line per test: normal stress σn (kPa) then peak shear stress τf (kPa).</p>
+  <div class="bar">
+    <textarea id="dsData" rows="5" cols="22" placeholder="50 30&#10;100 59&#10;150 87"></textarea>
+    <label><input type="checkbox" id="dsOrigin"> force through origin (c′ = 0)</label>
+    <button type="button" id="runDS">Fit envelope</button>
+  </div>
+  <div id="dsOut"></div>
+
+  <h3>2c &middot; Unconsolidated-undrained triaxial: cu</h3>
+  <p class="note">Deviator stress at failure (σ1 − σ3)f for each specimen, kPa. cu is HALF of it.</p>
+  <div class="bar">
+    <input id="uuData" size="30" placeholder="57.2, 55.8, 58.1">
+    <button type="button" id="runUU">Compute cu</button>
+  </div>
+  <div id="uuOut"></div>
+
+  <h3>2d &middot; Oedometer: Cc, Cr, σ′c</h3>
+  <p class="note">One line per increment, in the order tested: pressure, void ratio, and L (loading) or U (unloading).</p>
+  <div class="bar">
+    <textarea id="oedData" rows="8" cols="24" placeholder="0.5 0.882 L&#10;1 0.853 L&#10;2 0.779 L&#10;4 0.692 L&#10;8 0.603 L&#10;2 0.626 U&#10;0.5 0.649 U"></textarea>
+    <label>Pressure unit <select id="oedUnit"><option value="kpa">kPa</option><option value="kgcm2">kg/cm²</option></select></label>
+    <button type="button" id="runOed">Analyse</button>
+  </div>
+  <div id="oedOut"></div>
+</section>
+
+<!-- ================= P3 ================= -->
+<section class="panel" id="p3" hidden>
+  <h2>3 &middot; Bearing capacity (IS 6403:1981)</h2>
+  <p class="note">Uses the soil profile (tab 1) for the overburden pressure, unit weight and the design water table. Strength parameters can be copied from the layer below the base or typed in.</p>
+  <div class="grid2">
+    <label>Shape <select id="bShape"><option value="square">square</option><option value="rect">rectangular</option><option value="strip">strip</option><option value="circle">circular</option></select></label>
+    <label>Width B (diameter if circular) <input id="bB" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Length L (rectangular only) <input id="bL" size="6" inputmode="decimal" disabled> <span class="u">m</span></label>
+    <label>Depth of foundation Df <input id="bDf" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Cohesion c′ (cu if φ = 0) <input id="bc" size="6" inputmode="decimal"> <span class="u">kPa</span></label>
+    <label>Friction angle φ′ <input id="bphi" size="6" inputmode="decimal"> <span class="u">°</span></label>
+    <label>Load inclination from vertical α <input id="bAlpha" size="6" inputmode="decimal" placeholder="0"> <span class="u">°</span></label>
+    <label>Eccentricity along B, eB <input id="beB" size="6" inputmode="decimal" placeholder="0"> <span class="u">m</span></label>
+    <label>Eccentricity along L, eL <input id="beL" size="6" inputmode="decimal" placeholder="0"> <span class="u">m</span></label>
+    <label>Shear mode
+      <select id="bMode"><option value="auto">automatic (from e or Dr)</option><option value="general">general shear</option><option value="local">local shear</option></select></label>
+    <label>Void ratio e (sand) <input id="bE" size="6" inputmode="decimal"> <span class="u">-</span></label>
+    <label>Relative density Dr (sand) <input id="bDr" size="6" inputmode="decimal"> <span class="u">%</span></label>
+    <label>Factor of safety on net qnu <input id="bFS" size="6" inputmode="decimal" value="3"> <span class="u">-</span></label>
+    <label>Column load P (kN; kN/m for a strip) <input id="bP" size="8" inputmode="decimal"> <span class="u">kN</span></label>
+    <label>Footing thickness t (for its self-weight) <input id="bt" size="6" inputmode="decimal" placeholder="0"> <span class="u">m</span></label>
+  </div>
+  <div class="bar">
+    <button type="button" id="fillBear">Copy c′, φ′, e, Dr from the layer below the base</button>
+    <button type="button" id="runBear">Calculate</button>
+    <button type="button" id="solveB">Find smallest B for load P</button>
+  </div>
+  <div id="bearOut"></div>
+</section>
+
+<!-- ================= P4 ================= -->
+<section class="panel" id="p4" hidden>
+  <h2>4 &middot; Stress increase with depth (Boussinesq)</h2>
+  <p class="note">Uniform pressure on a rectangle. For a strip enter L at least 10 B (the formulas need a finite L). Depth z is measured below the loaded level (foundation base).</p>
+  <div class="grid2">
+    <label>Net pressure q <input id="sq" size="7" inputmode="decimal"> <span class="u">kPa</span></label>
+    <label>Width B <input id="sB" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Length L <input id="sL" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Maximum depth <input id="sZ" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Depth step <input id="sDz" size="6" inputmode="decimal" value="0.5"> <span class="u">m</span></label>
+  </div>
+  <p class="note">Optional: other loaded rectangles and an evaluation point in the same coordinates (superposition). One rectangle per line: <code>x1 x2 y1 y2 q</code> (m, m, m, m, kPa).</p>
+  <div class="bar">
+    <textarea id="sRects" rows="4" cols="34" placeholder="-1.25 1.25 -1.25 1.25 170&#10;3.75 6.25 -1.25 1.25 170"></textarea>
+    <label>Point x <input id="sPx" size="5" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Point y <input id="sPy" size="5" inputmode="decimal"> <span class="u">m</span></label>
+    <button type="button" id="runStress">Calculate</button>
+  </div>
+  <div id="stressOut"></div>
+</section>
+
+<!-- ================= P5 ================= -->
+<section class="panel" id="p5" hidden>
+  <h2>5 &middot; Settlement</h2>
+  <p class="note">Granular layers: Schmertmann et al. (1978) strain-influence method. Clay layers: one-dimensional consolidation in sublayers ≤ 0.5 m (normally or over-consolidated, from OCR in tab 1). Soil data come from tab 1.</p>
+  <div class="grid2">
+    <label>Width B <input id="tB" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Length L <input id="tL" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Depth of foundation Df <input id="tDf" size="6" inputmode="decimal"> <span class="u">m</span></label>
+    <label>Net applied pressure q <input id="tq" size="7" inputmode="decimal"> <span class="u">kPa</span></label>
+    <label>Time for the creep term (Schmertmann C2) <input id="tt" size="6" inputmode="decimal" value="10"> <span class="u">years</span></label>
+    <label>Stress distribution in clay
+      <select id="tMethod"><option value="boussinesq">Boussinesq (centre, with neighbours below)</option><option value="2:1">2:1 method</option></select></label>
+  </div>
+  <p class="note">Optional neighbouring loaded rectangles for the Boussinesq option, in coordinates with the footing centred at (0, 0): <code>x1 x2 y1 y2 q</code>.</p>
+  <div class="bar">
+    <textarea id="tRects" rows="3" cols="34"></textarea>
+    <button type="button" id="runSet">Calculate settlement</button>
+  </div>
+  <div id="setOut"></div>
+</section>
+
+<!-- ================= About ================= -->
+<section class="panel" id="p6" hidden>
+  <h2>About, assumptions and sources</h2>
+  <ul>
+    <li><b>Bearing capacity:</b> IS 6403:1981 cl. 5.1.2: qnu = c Nc sc dc ic + q (Nq − 1) sq dq iq + ½ B γ Nγ sγ dγ iγ W′. Nq = e<sup>π tanφ</sup> tan²(45° + φ/2), Nc = (Nq − 1) cot φ, Nγ = 2 (Nq + 1) tan φ. W′ = 0.5 for water table at or above the base, 1 at depth Df + B or more, linear between. Local shear: tan φ′ = 0.67 tan φ, c′ = 2c/3, interpolated by void ratio (0.55 to 0.75) or Dr (70 to 20 %).</li>
+    <li><b>Net safe bearing capacity</b> = qnu / FS, where qnu is the NET ultimate capacity. Compare with the NET applied pressure (load + footing − replaced soil).</li>
+    <li><b>SPT:</b> IS 2131: overburden factor CN = 0.77 log10(2000/σ′v) (σ′v in kPa, CN ≤ 2) then dilatancy N = 15 + ½ (N′ − 15) for fine or silty sand below the water table with N′ &gt; 15. φ′ from N: Peck, Hanson &amp; Thornburn (1974) as fitted by Wolff (1989). Correlations are indicative; use laboratory values when you have them.</li>
+    <li><b>Stress increase:</b> Boussinesq (1885) / Newmark (1935) corner influence factor; centre = 4 sub-rectangles; arbitrary points and several areas by superposition; 2:1 spread (Terzaghi &amp; Peck).</li>
+    <li><b>Settlement:</b> Schmertmann, Hartman &amp; Brown (1978); Terzaghi (1943) 1-D consolidation; Terzaghi time factor and the series solution for U.</li>
+    <li><b>Limits:</b> IS 1904:1986 Table 1 and cl. 16.3.5 are the basis of the settlement limits used in the design report, not applied automatically here.</li>
+    <li><b>Not modelled:</b> capillary rise, secondary compression, seismic and liquefaction effects, bearing capacity of layered soil (punching), pile design. These need separate checks by the designer.</li>
+    <li>Every equation in <code>src/engine.js</code> carries a <code>SRC:</code> comment with its source. Textbook equation numbers differ between editions and are not quoted.</li>
+  </ul>
+  <p class="note">Browser tests, benchmark tests and an independent Python cross-check are in the repository (see README).</p>
+</section>
+</main>
+<footer>Checks and design decisions remain the responsibility of the engineer. This tool shows every factor and every step so that each number can be traced and verified by hand.</footer>
+
+<script src="src/engine.js"></script>
+<script src="src/examples.js" onerror="void 0"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

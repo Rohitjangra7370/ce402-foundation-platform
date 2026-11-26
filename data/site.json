@@ -1,0 +1,89 @@
+{
+  "_comment": "Site data transcribed from CE 402 assignment (hypothetical). 'src' fields say where each ADOPTED parameter comes from. Depths in m bgl, stresses in kPa, unit weights in kN/m3.",
+  "grid": { "dx": 5, "dy": 5, "lines": ["1","2","3","4","5","6","7"], "rows": ["A","B","C","D"] },
+  "zones": { "1": "BH-2", "2": "BH-2", "3": "BH-1", "4": "BH-1", "5": "BH-1", "6": "BH-3", "7": "BH-3" },
+  "loads": {
+    "corner": { "P": 650, "cols": ["A1","A7","D1","D7"] },
+    "edge": { "P": 1000, "cols": ["A2","A3","A4","A5","A6","D2","D3","D4","D5","D6","B1","C1","B7","C7"] },
+    "interior": { "P": 1450, "cols": ["B2","B3","B4","B5","B6","C2","C3","C5","C6"] },
+    "assumed": { "P": 1450, "cols": ["C4"], "note": "C4 is on the grid but is not in the load table. Assumed interior column (1450 kN), M = 0. FLAGGED ASSUMPTION." }
+  },
+  "boreholes": {
+    "BH-1": {
+      "gl": 100.0, "wtMeasured": 2.6, "wtHigh": 1.0, "wtLow": 3.6,
+      "layers": [
+        { "name": "Fill", "sym": "-", "kind": "fill", "top": 0, "bot": 0.6, "gm": 16.5, "gs": 16.5, "N": [] },
+        { "name": "Silty fine-medium SAND", "sym": "SM", "kind": "sand", "fine": true, "top": 0.6, "bot": 3.4, "gm": 18.0, "gs": 20.0,
+          "N": [{ "z": 1.5, "N": 13 }, { "z": 3.0, "N": 16 }], "c": 0, "phi": 30, "e": 0.591, "qcN": 0.35,
+          "src": "phi: soaked direct shear of SM (fit 30.0 deg, c' = 1.0 kPa -> c'=0 adopted); e = Gs*gw/gd - 1 = 2.66*9.81/16.4 - 1 (sand replacement at 1.2 m); qc/N: Schmertmann 1970, silty sand" },
+        { "name": "Poorly graded SAND with gravel", "sym": "SP", "kind": "sand", "fine": false, "top": 3.4, "bot": 5.8, "gm": 19.0, "gs": 20.4,
+          "N": [{ "z": 4.5, "N": 24 }], "c": 0, "phi": 34, "qcN": 0.5,
+          "src": "phi: soaked direct shear of SP (fit 34.4 deg, rounded down to 34); qc/N: Schmertmann 1970, coarse sand" },
+        { "name": "Silty CLAY (upper)", "sym": "CI", "kind": "clay", "top": 5.8, "bot": 8.2, "gm": 18.6, "gs": 18.6,
+          "N": [{ "z": 6.0, "N": 6 }, { "z": 7.5, "N": 5 }], "cu": 28.5, "e0": 0.918, "Cc": 0.29, "Cr": 0.038, "ocr": 1.0, "cv": 6.3e-4,
+          "src": "cu = 57/2 kPa (UU on UDS-1, phi_u=0); e0 = w*Gs = 0.34*2.70; Cc, Cr from oedometer; cv = 6.3e-4 cm2/s (increment 1-2 kg/cm2, the slower one); OCR 1 (NC adopted; Casagrande-type sigma_c ~ 70-110 kPa vs sigma_v0 ~ 80 kPa)" },
+        { "name": "Silty CLAY (lower)", "sym": "CI", "kind": "clay", "top": 8.2, "bot": 10.6, "gm": 18.6, "gs": 18.6,
+          "N": [{ "z": 9.0, "N": 22, "invalid": true, "note": "sampler struck a cobble, gravel only recovered" }, { "z": 10.5, "N": 8 }], "cu": 36.1, "e0": 0.837, "Cc": 0.29, "Cr": 0.038, "ocr": 1.0, "cv": 6.3e-4,
+          "src": "cu = 72.2/2 kPa (UU on UDS-2); e0 = 0.31*2.70; Cc, Cr, cv from UDS-1 (no test on UDS-2). N=22 at 9.0 m rejected" },
+        { "name": "Sandy GRAVEL with cobbles", "sym": "GW", "kind": "gravel", "top": 10.6, "bot": 15.0, "gm": 21.5, "gs": 21.5,
+          "N": [{ "z": 12.0, "N": 100, "refusal": true }, { "z": 13.5, "N": 100, "refusal": true }], "c": 0, "phi": 40, "qcN": 0.8,
+          "src": "refusal; phi = 40 assumed (very dense gravel)" }
+      ]
+    },
+    "BH-2": {
+      "gl": 100.2, "wtMeasured": 3.2, "wtHigh": 1.7, "wtLow": 4.2,
+      "layers": [
+        { "name": "Fill", "sym": "-", "kind": "fill", "top": 0, "bot": 0.5, "gm": 16.5, "gs": 16.5, "N": [] },
+        { "name": "Silty fine-medium SAND", "sym": "SM", "kind": "sand", "fine": true, "top": 0.5, "bot": 3.8, "gm": 18.2, "gs": 20.0,
+          "N": [{ "z": 1.5, "N": 14 }, { "z": 3.0, "N": 17 }], "c": 0, "phi": 30, "Dr": 48, "qcN": 0.35,
+          "src": "phi = 30 from BH-1 soaked SM shear (similar N, 16% fines; no lab test on BH-2); Dr from corrected N (Peck et al. bands); qc/N silty sand" },
+        { "name": "Poorly graded SAND with gravel", "sym": "SP", "kind": "sand", "fine": false, "top": 3.8, "bot": 7.6, "gm": 19.3, "gs": 20.6,
+          "N": [{ "z": 4.5, "N": 26 }, { "z": 6.0, "N": 31 }, { "z": 7.5, "N": 34 }], "c": 0, "phi": 34, "qcN": 0.5,
+          "src": "phi = 34 from BH-1 soaked SP shear (BH-2 N is higher, so conservative)" },
+        { "name": "Silty CLAY", "sym": "CI", "kind": "clay", "top": 7.6, "bot": 9.6, "gm": 18.7, "gs": 18.7,
+          "N": [{ "z": 9.0, "N": 9 }], "cu": 45, "e0": 0.891, "Cc": 0.288, "Cr": 0.037, "ocr": 1.0, "cv": 6.3e-4,
+          "src": "e0 = w*Gs = 0.33*2.70 (Gs from BH-1); Cc = 0.009(LL-10) (Terzaghi & Peck 1967; reproduces BH-1 lab Cc 0.29 for LL 44); Cr = 0.13 Cc; cu = 5N (calibrated on BH-1: 28.5 kPa at N ~ 5.5); cv from BH-1" },
+        { "name": "Sandy GRAVEL with cobbles", "sym": "GW", "kind": "gravel", "top": 9.6, "bot": 15.0, "gm": 21.5, "gs": 21.5,
+          "N": [{ "z": 10.5, "N": 100, "refusal": true }, { "z": 12.0, "N": 100, "refusal": true }], "c": 0, "phi": 40, "qcN": 0.8, "src": "refusal; phi = 40 assumed" }
+      ]
+    },
+    "BH-3": {
+      "gl": 99.7, "wtMeasured": 1.9, "wtHigh": 0.6, "wtLow": 3.0,
+      "layers": [
+        { "name": "Fill (organic)", "sym": "-", "kind": "fill", "top": 0, "bot": 0.9, "gm": 16.0, "gs": 16.0, "N": [] },
+        { "name": "Loose silty fine SAND", "sym": "SM", "kind": "sand", "fine": true, "top": 0.9, "bot": 2.6, "gm": 17.5, "gs": 19.5,
+          "N": [{ "z": 1.5, "N": 6 }], "c": 0, "phi": 29, "Dr": 31, "qcN": 0.3,
+          "src": "phi from corrected N (Peck et al./Wolff 29.7 deg, rounded down to 29; below the BH-1 lab value because looser, 24% fines); Dr from corrected N bands" },
+        { "name": "Poorly graded fine-medium SAND", "sym": "SP", "kind": "sand", "fine": false, "top": 2.6, "bot": 4.4, "gm": 18.6, "gs": 20.0,
+          "N": [{ "z": 3.0, "N": 14 }], "c": 0, "phi": 32, "qcN": 0.45,
+          "src": "phi from corrected N and BH-1 SP lab value (34), reduced for lower N and fine-medium grading" },
+        { "name": "Soft silty CLAY (upper)", "sym": "CI", "kind": "clay", "top": 4.4, "bot": 7.8, "gm": 18.5, "gs": 18.5,
+          "N": [{ "z": 4.5, "N": 4 }, { "z": 6.0, "N": 4 }, { "z": 7.5, "N": 5 }], "cu": 22, "e0": 0.945, "Cc": 0.315, "Cr": 0.041, "ocr": 1.0, "cv": 6.3e-4,
+          "src": "e0 = w*Gs = 0.35*2.70; Cc = 0.009(LL-10) (LL 45); NO consolidation test possible (both UDS disturbed); Cr = 0.13 Cc; cu = 5N; cv from BH-1 - UNCERTAIN, see report" },
+        { "name": "Soft-firm silty CLAY (lower)", "sym": "CI", "kind": "clay", "top": 7.8, "bot": 11.2, "gm": 18.5, "gs": 18.5,
+          "N": [{ "z": 9.0, "N": 6 }, { "z": 10.5, "N": 8 }], "cu": 33, "e0": 0.945, "Cc": 0.315, "Cr": 0.041, "ocr": 1.0, "cv": 6.3e-4, "src": "as above, cu = 5N" },
+        { "name": "Sandy GRAVEL with cobbles", "sym": "GW", "kind": "gravel", "top": 11.2, "bot": 15.0, "gm": 21.5, "gs": 21.5,
+          "N": [{ "z": 12.0, "N": 100, "refusal": true }, { "z": 13.5, "N": 100, "refusal": true }], "c": 0, "phi": 40, "qcN": 0.8, "src": "refusal; phi = 40 assumed" }
+      ]
+    }
+  },
+  "lab": {
+    "ds": {
+      "SM unsoaked (w=10%)": { "sigma": [50, 100, 150], "tau": [37.0, 67.0, 97.2] },
+      "SM soaked": { "sigma": [50, 100, 150], "tau": [29.8, 58.9, 87.5] },
+      "SP soaked": { "sigma": [50, 100, 150], "tau": [34.9, 68.3, 103.4] }
+    },
+    "uu": { "UDS-1": [57.2, 55.8, 58.1], "UDS-2": [71.0, 73.4, 72.2] },
+    "oed_kgcm2": [
+      { "p": 0.10, "e": 0.914, "stage": "L", "cv": null },
+      { "p": 0.25, "e": 0.897, "stage": "L", "cv": 1.2e-3 },
+      { "p": 0.50, "e": 0.882, "stage": "L", "cv": 1.1e-3 },
+      { "p": 1.00, "e": 0.853, "stage": "L", "cv": 8.9e-4 },
+      { "p": 2.00, "e": 0.779, "stage": "L", "cv": 6.3e-4 },
+      { "p": 4.00, "e": 0.692, "stage": "L", "cv": 5.0e-4 },
+      { "p": 8.00, "e": 0.603, "stage": "L", "cv": 4.4e-4 },
+      { "p": 2.00, "e": 0.626, "stage": "U" },
+      { "p": 0.50, "e": 0.649, "stage": "U" }
+    ]
+  }
+}
